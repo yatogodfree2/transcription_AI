@@ -15,7 +15,7 @@
   - [x] Configure GitHub Actions for test/lint
   - [x] Ensure `make test` is green, CI runs < 5 min
 - [ ] Sprint 2: ASR-MVP
-  - [ ] Implement worker for file upload and Redis RQ queue
+  - [x] Implement worker for file upload and Redis RQ queue
   - [ ] Integrate Whisper CLI → JSON/VTT
   - [ ] REST endpoint /transcribe
 - [ ] Sprint 3: Segment + Embedding-3
