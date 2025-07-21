@@ -5,20 +5,11 @@ WORKDIR /app
 # Install Poetry
 RUN pip install poetry==1.6.1
 
-# Copy poetry configuration files
-COPY pyproject.toml poetry.lock* ./
+# Copy ALL application files first
+COPY . .
 
 # Configure poetry to not use a virtual environment
 RUN poetry config virtualenvs.create false
 
 # Install dependencies
 RUN poetry install --no-dev --no-interaction --no-ansi
-
-# Copy the rest of the application
-COPY . .
-
-# Expose the port
-EXPOSE 8000
-
-# Command to run the FastAPI application
-CMD ["uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8000"]
