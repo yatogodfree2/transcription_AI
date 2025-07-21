@@ -2,9 +2,9 @@
 
 A web service that helps users extract insights, summaries, and answers from video and audio content.
 
-## Features (Planned)
+## Features
 
-- Automatic Speech Recognition (ASR) using OpenAI Whisper
+- Automatic Speech Recognition (ASR) using Vosk (replacing Whisper)
 - Content segmentation into chapters for easy navigation
 - Semantic search and RAG (Retrieval Augmented Generation)
 - LLM-powered Q&A about content
@@ -28,12 +28,28 @@ This project uses a "micro-pipeline" architecture where each processing step run
 1. Clone this repository
 2. Install dependencies:
    ```bash
-   make install
+   poetry install
    ```
-3. Run development environment:
+3. Run the complete transcription pipeline with a single command:
    ```bash
-   make dev
+   poetry run run-all
    ```
+
+   Or run components separately:
+   ```bash
+   # Start Redis server if not already running
+   redis-server
+   
+   # Start API server
+   poetry run api
+   
+   # Start worker
+   poetry run worker
+   ```
+
+4. Access the API:
+   - Swagger UI: http://localhost:8001/docs
+   - Upload endpoint: http://localhost:8001/api/v1/transcribe
 
 ## Project Structure
 

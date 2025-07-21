@@ -39,7 +39,21 @@ async def health():
     return {"status": "ok"}
 
 
-if __name__ == "__main__":
+def run_api(host="0.0.0.0", port=8000):
+    """Run FastAPI server using uvicorn.
+    
+    Args:
+        host: Host to bind the server to.
+        port: Port to bind the server to.
+    """
     import uvicorn
+    import os
+    
+    # Allow port override via environment variable
+    port = int(os.environ.get("API_PORT", port))
+    
+    uvicorn.run("backend.app.main:app", host=host, port=port, reload=True)
 
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+
+if __name__ == "__main__":
+    run_api()

@@ -1,9 +1,9 @@
 # Smart Assistant for Video/Audio Content: Development Plan
 
 ## Notes
-- Project scope (MVP): file upload → ASR (Whisper) → chapters → search/RAG → LLM answer → cache.
+- Project scope (MVP): file upload → ASR (Vosk) → chapters → search/RAG → LLM answer → cache.
 - Micro-pipeline architecture: each step is a separate Docker worker.
-- Key tech stack: OpenAI Whisper (ASR), text-embedding-3-small, GPT-4o (LLM), FAISS (vector DB), FastAPI (backend), Next.js (frontend), docker-compose/Helm (DevOps), OpenTelemetry/Prometheus/Grafana (observability).
+- Key tech stack: Vosk (ASR), text-embedding-3-small, GPT-4o (LLM), FAISS (vector DB), FastAPI (backend), Next.js (frontend), docker-compose/Helm (DevOps), OpenTelemetry/Prometheus/Grafana (observability).
 - Redis Streams as shared message bus; artefacts stored at minimum on S3.
 - Semantic versioning + DVC for embedding indexes.
 - Security: Pydantic validators for PII, explicit user consent for external APIs.
@@ -14,10 +14,15 @@
   - [x] Create docker-compose.yml with hello-FastAPI
   - [x] Configure GitHub Actions for test/lint
   - [x] Ensure `make test` is green, CI runs < 5 min
-- [ ] Sprint 2: ASR-MVP
+- [x] Sprint 2: ASR-MVP
   - [x] Implement worker for file upload and Redis RQ queue
-  - [ ] Integrate Whisper CLI → JSON/VTT
-  - [ ] REST endpoint /transcribe
+  - [x] Research and select open-source Whisper-compatible ASR model (Vosk)
+  - [x] Integrate Vosk ASR model CLI → JSON/VTT
+    - [x] Update transcription logic to use Vosk
+    - [x] Implement automatic Vosk model management (download/check)
+  - [x] REST endpoint /transcribe
+  - [x] Verify job processing with correct queue name and check output files
+  - [x] Add Poetry script/command to launch API and worker together
 - [ ] Sprint 3: Segment + Embedding-3
   - [ ] Sentence splitter, 8192 token batcher
   - [ ] Async OpenAI Embed-3 wrapper + LRU-cache
@@ -52,4 +57,4 @@
   - [ ] Public link for 20 alpha-users
 
 ## Current Goal
-Start Sprint 2: ASR-MVP (file upload worker)
+Start Sprint 3: Segment + Embedding-3 (semantic processing)

@@ -63,10 +63,10 @@ def save_uploaded_file(file_content: bytes, filename: str, upload_dir: str = "da
 
 
 def process_file(file_info: Dict) -> Dict:
-    """Process uploaded file using Whisper for transcription.
+    """Process uploaded file using Vosk for transcription.
     
     This function is executed by the worker to process audio files.
-    It transcribes audio to text using OpenAI's Whisper and returns
+    It transcribes audio to text using Vosk ASR and returns
     the results in JSON and VTT formats.
 
     Args:
@@ -83,10 +83,10 @@ def process_file(file_info: Dict) -> Dict:
         transcription_dir = Path("data/transcriptions")
         transcription_dir.mkdir(parents=True, exist_ok=True)
         
-        # Convert audio to a format compatible with Whisper if needed
+        # Convert audio to a format compatible with Vosk if needed
         _, ext = os.path.splitext(file_path)
         if ext.lower() not in [".wav"]:
-            # Convert to WAV format for best compatibility with Whisper
+            # Convert to WAV format for best compatibility with Vosk
             wav_path = os.path.join("data/uploads", f"{file_id}.wav")
             converted_path = transcription.convert_audio_format(
                 input_file=file_path,
@@ -95,12 +95,13 @@ def process_file(file_info: Dict) -> Dict:
         else:
             converted_path = file_path
         
-        # Perform transcription using Whisper
+        # Perform transcription using Vosk
         result = transcription.transcribe_audio(
             audio_file=converted_path,
             output_dir="data/transcriptions",
-            model_size="base",  # Use base model for faster processing
-            output_formats=["json", "vtt"]
+            model_size="small",  # Use small model for faster processing
+            output_formats=["json", "vtt"],
+            mock_mode=False
         )
         
         # Return results
