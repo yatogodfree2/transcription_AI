@@ -1,10 +1,10 @@
 """Worker script to process jobs from Redis queue."""
 import argparse
-import os
 import sys
 
-import redis
 from rq import Connection, Worker
+
+from backend.core.utils import get_redis_connection
 
 
 def run_worker(queue_names=None):
@@ -16,9 +16,7 @@ def run_worker(queue_names=None):
     if queue_names is None:
         queue_names = ["transcription"]
 
-    redis_host = os.environ.get("REDIS_HOST", "localhost")
-    redis_port = int(os.environ.get("REDIS_PORT", 6379))
-    redis_connection = redis.Redis(host=redis_host, port=redis_port)
+    redis_connection = get_redis_connection()
 
     with Connection(redis_connection):
         worker = Worker(queue_names)

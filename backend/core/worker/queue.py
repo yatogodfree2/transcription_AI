@@ -1,9 +1,10 @@
 """Queue management for Redis RQ."""
-import os
 from typing import Optional
 
 import redis
 from rq import Queue as RQQueue
+
+from backend.core.utils import get_redis_connection
 
 
 class Queue:
@@ -17,9 +18,7 @@ class Queue:
             connection: Redis connection. If None, a new connection will be created.
         """
         if connection is None:
-            redis_host = os.environ.get("REDIS_HOST", "localhost")
-            redis_port = int(os.environ.get("REDIS_PORT", 6379))
-            connection = redis.Redis(host=redis_host, port=redis_port)
+            connection = get_redis_connection()
 
         self._queue = RQQueue(name=name, connection=connection)
         self.name = name

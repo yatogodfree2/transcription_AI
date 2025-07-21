@@ -91,8 +91,7 @@ def transcribe_audio(
     output_dir: str = "data/transcriptions",
     model_size: str = "small",  # Vosk model size (small, medium, large)
     language: Optional[str] = None,
-    output_formats: Optional[List[str]] = None,
-    mock_mode: bool = False,  # Set to False since we're implementing actual Vosk integration
+    output_formats: Optional[List[str]] = None
 ) -> Dict[str, Union[str, Dict]]:
     """Transcribe audio using Vosk ASR.
 
@@ -102,7 +101,6 @@ def transcribe_audio(
         model_size: Vosk model size (small, medium, large).
         language: Language code (ISO 639-1) to force. None for auto-detection (defaults to English).
         output_formats: List of output formats. Defaults to ["json", "vtt"].
-        mock_mode: If True, generates mock output instead of calling Vosk.
 
     Returns:
         Dict: Transcription results with paths to output files.
@@ -122,66 +120,10 @@ def transcribe_audio(
     base_name = Path(audio_file).stem
     output_prefix = output_path / base_name
     
-    if mock_mode:
-        print(f"[MOCK MODE] Generating mock transcription for {audio_file}")
-        # Generate mock output files
-        mock_transcript = "This is a mock transcript generated as a placeholder. Vosk integration pending."
-        
-        # Create mock JSON file
-        json_file = output_path / f"{base_name}.json"
-        mock_json = {
-            "text": mock_transcript,
-            "segments": [
-                {
-                    "id": 0,
-                    "start": 0.0,
-                    "end": 3.0,
-                    "text": "This is a mock transcript"
-                },
-                {
-                    "id": 1,
-                    "start": 3.0,
-                    "end": 6.0,
-                    "text": "generated as a placeholder."
-                },
-                {
-                    "id": 2,
-                    "start": 6.0,
-                    "end": 9.0,
-                    "text": "Vosk integration pending."
-                }
-            ],
-            "language": language or "en"
-        }
-        with open(json_file, "w") as f:
-            json.dump(mock_json, f, indent=2)
-            
-        # Create mock VTT file
-        vtt_file = output_path / f"{base_name}.vtt"
-        mock_vtt = "WEBVTT\n\n" + \
-                  "1\n00:00:00.000 --> 00:00:03.000\nThis is a mock transcript\n\n" + \
-                  "2\n00:00:03.000 --> 00:00:06.000\ngenerated as a placeholder.\n\n" + \
-                  "3\n00:00:06.000 --> 00:00:09.000\nVosk integration pending."
-                  
-        with open(vtt_file, "w") as f:
-            f.write(mock_vtt)
-            
-        # Return paths to mock output files
-        outputs = {
-            "json": str(json_file),
-            "vtt": str(vtt_file),
-            "transcription": mock_json
-        }
-                
-        return {
-            "success": True,
-            "audio_file": audio_file,
-            "outputs": outputs,
-            "model": "mock",
-            "command_output": "[MOCK] Transcription completed successfully.",
-        }
-    else:
-        try:
+    # Initialize output files dictionary
+    outputs = {}
+    
+    try:
             # Convert audio to format suitable for Vosk if needed
             wav_file = audio_file
             if not audio_file.lower().endswith('.wav'):
@@ -360,8 +302,8 @@ def transcribe_audio(
                 "command_output": f"Vosk transcription completed successfully with model: {model_name}",
             }
             
-        except Exception as e:
-            raise TranscriptionError(f"Vosk transcription failed: {str(e)}")
+    except Exception as e:
+        raise TranscriptionError(f"Vosk transcription failed: {str(e)}")
 
 
 
