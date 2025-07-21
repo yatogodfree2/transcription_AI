@@ -202,19 +202,28 @@ def transcribe_audio(
             segments = []
             full_text = ""
             segment_id = 0
-            current_time = 0.0
+            sample_rate = 0
             
             with wave.open(wav_file, "rb") as wf:
                 # Check audio format - must be 16-bit PCM
                 if wf.getnchannels() != 1 or wf.getsampwidth() != 2 or wf.getcomptype() != "NONE":
                     raise TranscriptionError("Audio file must be WAV format mono PCM.")
+                
+                # Get sample rate for accurate timings
+                sample_rate = wf.getframerate()
                     
                 # Create recognizer
-                rec = KaldiRecognizer(model, wf.getframerate())
+                rec = KaldiRecognizer(model, sample_rate)
                 rec.SetWords(True)  # Get word timestamps
                 
+                # Get file duration for proper timings
+                duration = wf.getnframes() / float(sample_rate)
+                logger.info(f"Audio duration: {duration:.2f} seconds")
+                
                 # Process audio chunks
-                chunk_size = 4000  # Read 4000 frames at a time
+                chunk_size = 8000  # Read 8000 frames at a time for better sentence boundaries
+                all_words = []
+                
                 while True:
                     data = wf.readframes(chunk_size)
                     if len(data) == 0:
@@ -224,43 +233,70 @@ def transcribe_audio(
                         # Process complete utterance
                         result = json.loads(rec.Result())
                         if "result" in result and result["result"]:
-                            # Calculate timestamps
-                            words = result["result"]
-                            start_time = current_time
-                            end_time = words[-1]["end"] + current_time
-                            text = result["text"]
-                            
-                            # Add to full text
-                            full_text += text + " "
-                            
-                            # Create segment
-                            segments.append({
-                                "id": segment_id,
-                                "start": round(start_time, 3),
-                                "end": round(end_time, 3),
-                                "text": text
-                            })
-                            segment_id += 1
-                            current_time = end_time
+                            # Add words with precise timestamps
+                            all_words.extend(result["result"])
+                            # We'll group them into segments later
                 
                 # Get final result
                 final_result = json.loads(rec.FinalResult())
                 if "result" in final_result and final_result["result"]:
-                    words = final_result["result"]
-                    start_time = current_time
-                    end_time = words[-1]["end"] + current_time
-                    text = final_result["text"]
-                    
-                    # Add to full text
-                    full_text += text
-                    
-                    # Create segment
-                    segments.append({
+                    all_words.extend(final_result["result"])
+                
+                # Group words into sentences/segments based on natural pauses
+                # A new segment starts when there's a significant pause (>0.3s)
+                if all_words:
+                    current_segment = {
                         "id": segment_id,
-                        "start": round(start_time, 3),
-                        "end": round(end_time, 3),
-                        "text": text
-                    })
+                        "words": [],
+                        "text": ""
+                    }
+                    
+                    prev_end = all_words[0]["start"]
+                    
+                    for word in all_words:
+                        # Check if there's a significant pause
+                        if word["start"] - prev_end > 0.3 and current_segment["words"]:
+                            # Finalize current segment
+                            words_text = " ".join(w["word"] for w in current_segment["words"])
+                            start_time = current_segment["words"][0]["start"]
+                            end_time = current_segment["words"][-1]["end"]
+                            
+                            segments.append({
+                                "id": segment_id,
+                                "start": round(start_time, 3),
+                                "end": round(end_time, 3),
+                                "text": words_text
+                            })
+                            
+                            full_text += words_text + " "
+                            segment_id += 1
+                            
+                            # Start new segment
+                            current_segment = {
+                                "id": segment_id,
+                                "words": [word],
+                                "text": ""
+                            }
+                        else:
+                            # Add to current segment
+                            current_segment["words"].append(word)
+                        
+                        prev_end = word["end"]
+                    
+                    # Don't forget the last segment
+                    if current_segment["words"]:
+                        words_text = " ".join(w["word"] for w in current_segment["words"])
+                        start_time = current_segment["words"][0]["start"]
+                        end_time = current_segment["words"][-1]["end"]
+                        
+                        segments.append({
+                            "id": segment_id,
+                            "start": round(start_time, 3),
+                            "end": round(end_time, 3),
+                            "text": words_text
+                        })
+                        
+                        full_text += words_text
             
             # Create transcription result
             transcription = {

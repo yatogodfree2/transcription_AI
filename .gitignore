@@ -28,6 +28,7 @@ MANIFEST
 
 # Data
 data/
+dump.rdb
 
 # models
 models/
