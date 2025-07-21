@@ -4,7 +4,7 @@ import signal
 import subprocess
 import sys
 import time
-from typing import List, Dict, Optional
+from typing import Dict
 
 # Default configuration
 DEFAULT_CONFIG = {
